@@ -1,0 +1,19 @@
+{
+  "name": "pkb",
+  "description": "Personal knowledge base tools based on Karpathy's LLM Wiki pattern",
+  "owner": {
+    "name": "sdeng079"
+  },
+  "plugins": [
+    {
+      "name": "pkb",
+      "description": "LLM-powered personal knowledge base: ingest sources, query wiki, lint quality",
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "sdeng079"
+      },
+      "license": "MIT"
+    }
+  ]
+}
