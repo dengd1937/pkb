@@ -5,7 +5,7 @@ A personal Claude Code plugin marketplace for LLM-powered knowledge management, 
 ## Install
 
 ```bash
-/plugin marketplace add sdeng079/pkb
+/plugin marketplace add dengd1937/pkb
 /plugin install pkb@pkb
 ```
 
@@ -13,6 +13,14 @@ A personal Claude Code plugin marketplace for LLM-powered knowledge management, 
 
 ### Ingest a source
 > Ingest this article: https://example.com/article
+
+### Ingest a WeChat article
+> Ingest this WeChat article: https://mp.weixin.qq.com/s/...
+
+Requires Python 3.10+ with dependencies installed:
+```bash
+pip install -r skills/wechat2md/requirements.txt
+```
 
 ### Query the wiki
 > What do I know about X?
@@ -27,9 +35,15 @@ pkb/
 ├── .claude-plugin/
 │   └── marketplace.json
 ├── skills/
-│   └── llm-wiki/
+│   ├── llm-wiki/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   └── wechat2md/
 │       ├── SKILL.md
-│       └── references/
+│       ├── main.py
+│       ├── mcp_server.py
+│       ├── requirements.txt
+│       └── wechat_to_md/
 ├── CLAUDE.md
 ├── package.json
 └── README.md

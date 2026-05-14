@@ -2,16 +2,16 @@
   "name": "pkb",
   "description": "Personal knowledge base tools based on Karpathy's LLM Wiki pattern",
   "owner": {
-    "name": "sdeng079"
+    "name": "dengd1937"
   },
   "plugins": [
     {
       "name": "pkb",
-      "description": "LLM-powered personal knowledge base: ingest sources, query wiki, lint quality",
+      "description": "LLM-powered personal knowledge base: ingest sources, query wiki, lint quality. Includes WeChat article converter for mp.weixin.qq.com URLs.",
       "version": "1.0.0",
       "source": "./",
       "author": {
-        "name": "sdeng079"
+        "name": "dengd1937"
       },
       "license": "MIT"
     }
