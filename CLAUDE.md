@@ -28,6 +28,11 @@ pip install -r skills/wechat2md/requirements.txt
 ### Lint the wiki
 > Lint my wiki
 
+### Scrape a tweet or X Article to Markdown
+> 保存这条推特：https://x.com/user/status/123
+>
+> 把这条推文转 Markdown 到 ./tweets/foo.md
+
 ## Structure
 
 ```
@@ -38,15 +43,20 @@ pkb/
 │   ├── llm-wiki/
 │   │   ├── SKILL.md
 │   │   └── references/
-│   └── wechat2md/
+│   ├── wechat2md/
+│   │   ├── SKILL.md
+│   │   ├── main.py
+│   │   ├── mcp_server.py
+│   │   ├── requirements.txt
+│   │   └── wechat_to_md/
+│   └── x2md/
 │       ├── SKILL.md
-│       ├── main.py
-│       ├── mcp_server.py
-│       ├── requirements.txt
-│       └── wechat_to_md/
+│       └── scripts/
 ├── CLAUDE.md
 ├── package.json
 └── README.md
 ```
 
-The skill creates `raw/` and `wiki/` directories in your project at runtime.
+- `llm-wiki` creates `raw/` and `wiki/` directories in your project at runtime.
+- `wechat2md` converts WeChat (mp.weixin.qq.com) articles to Markdown — see its SKILL.md for the Python dependencies.
+- `x2md` scrapes X/Twitter URLs (tweets, Articles, threads) to Markdown via headless Chromium — assumes `~/.scrapling-venv` is set up; see its SKILL.md.
