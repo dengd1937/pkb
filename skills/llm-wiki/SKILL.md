@@ -53,9 +53,41 @@ Fetch a source into raw/, then compile it into wiki/. Always both steps, no exce
    - Published date unknown → omit the date prefix from the file name (e.g., `descriptive-slug.md`). The metadata Published field still appears; set it to `Unknown`.
    - If a file with the same name already exists, append a numeric suffix (e.g., `descriptive-slug-2.md`).
    - Include metadata header: source URL, collected date, published date.
-   - Preserve original text. Clean formatting noise. Do not rewrite opinions.
 
-   See `references/raw-template.md` for the exact format.
+4. The raw layer must capture the **full source**, never a landing-page snippet or your own summary. If a fetched page looks like only an abstract / teaser / paywalled preview (e.g., an arXiv `/abs/` page), you must obtain the real body before saving — do not save a partial, do not substitute a summary.
+
+   - **Blogs / articles / docs**: follow the **Blog / Article Full Text** rules below. See `references/blog-template.md`.
+   - **Academic papers (arXiv, OpenReview, ACL Anthology, conference PDFs)**: follow the **Academic Paper Digest** rules below instead. See `references/paper-template.md`.
+   - **Single social-media posts / threads (X, etc.)**: out of scope for this skill — use the dedicated `x2md` skill.
+
+#### Academic Paper Digest
+
+For papers, the raw file is a faithful **Chinese close-reading digest** (not the English full text). Reproducibility is anchored by the stable `Source` + `Full text` URLs, not by vendoring the full body.
+
+- **Source vs Full text**: `Source` = the canonical citable URL (for arXiv, the `/abs/<id>` page). `Full text` = the URL you actually read the body from.
+- **arXiv full-text chain** (try in order, record which worked as `Full text`):
+  1. `https://arxiv.org/html/<id>` — official HTML, only exists for papers submitted from ~2023-12 onward.
+  2. `https://ar5iv.labs.arxiv.org/html/<id>` — ar5iv mirror; the workhorse for older papers.
+  3. PDF — last-resort fallback.
+- **Body**: section-by-section close-reading summary in Chinese, covering down to subsections (experimental setup, ablations, robustness, key results). Keep technical terms in English (chain-of-thought, GSM8K, emergent ability) and keep key formulas (LaTeX) and key numbers verbatim. Faithful to the source — do **not** add cross-source interpretation (意义 / 影响 / 在某框架中的位置); that belongs only in wiki/.
+- **Figures**: download important figures into `raw/<topic>/assets/<slug>/` and reference them locally, each with a Chinese caption. Charts rendered as inline SVG/HTML (not downloadable images) → transcribe their data into a Markdown table instead.
+- **Tables**: convert key result tables to Markdown tables, with real numbers transcribed verbatim (never invent or estimate values).
+- **References**: do not vendor the full bibliography. List only the works the body actually leans on, then point to the `Full text` URL for the complete list.
+- **Strip as format noise**: the body's duplicated title/author/email block, figure-axis numeric runs (e.g. `$0$ $20$ $40$ …`), mirror footer chrome, and submission boilerplate (NeurIPS Checklist, Version Control, Reproducibility / Ethics Statement, Acknowledgements).
+
+#### Blog / Article Full Text
+
+For blogs/articles/docs, the raw file is a faithful **full Chinese translation of the entire post** — not a summary, not a digest. Every section, paragraph, list, and table is preserved; nothing is condensed or dropped.
+
+- **Fetch the real full body, not a summarizer's output**. Pull the raw HTML directly (e.g. `curl -sL`), isolate the article content container, strip site chrome (nav, sidebar, table-of-contents, footer, comment widgets, share buttons), and convert to Markdown. Do **not** use a summarizing web-fetch tool as the source of the body — it silently truncates and paraphrases.
+- **Source vs Full text**: `Source` = canonical post URL. `Full text` = the URL the body was actually pulled from (often the same). If the site offers an official translation in the user's language, prefer it as `Full text` but still capture the whole post.
+- **Translate the full text into Chinese**, faithfully and completely. Keep the original section structure and ordering. Keep technical terms / proper nouns in their original form (e.g. chain-of-thought, ReAct, HNSW). Translate figure captions into Chinese.
+- **Keep code, prompts, configs, JSON, BibTeX, and command snippets verbatim in the original language** inside fenced code blocks — translating an artifact corrupts it.
+- **Images**: download every content image into `raw/<topic>/assets/<slug>/` and reference them locally inline at their original position, each with a translated caption. Convert HTML tables to Markdown tables.
+- **References / citation blocks**: keep as-is (do not translate bibliographic entries or `@article{...}`).
+- **Do not add interpretation** (意义 / 影响 / 个人评价). The raw file is the faithfully translated source; synthesis belongs only in wiki/.
+
+See `references/raw-template.md` (fallback) / `references/blog-template.md` (blogs) / `references/paper-template.md` (papers) for the exact format.
 
 ### Compile (wiki/)
 
