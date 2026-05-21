@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "pkb",
-      "description": "LLM-powered personal knowledge base: ingest sources, query wiki, lint quality. Includes WeChat article converter and tweet/article to Markdown scraper.",
+      "description": "LLM-powered personal knowledge base: ingest sources, query knowledge base, lint quality. Includes WeChat article converter, tweet/article to Markdown scraper, and in-flow issue feedback.",
       "version": "1.1.0",
       "source": "./",
       "author": {
