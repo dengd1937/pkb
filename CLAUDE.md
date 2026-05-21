@@ -22,11 +22,11 @@ Requires Python 3.10+ with dependencies installed:
 pip install -r skills/wechat2md/requirements.txt
 ```
 
-### Query the wiki
+### Query the knowledge base
 > What do I know about X?
 
-### Lint the wiki
-> Lint my wiki
+### Lint the knowledge base
+> Lint my knowledge base
 
 ### Scrape a tweet or X Article to Markdown
 > 保存这条推特：https://x.com/user/status/123
@@ -57,6 +57,6 @@ pkb/
 └── README.md
 ```
 
-- `llm-wiki` creates `raw/` and `wiki/` directories in your project at runtime.
+- `llm-wiki` creates `raw/` directories in your project at runtime. Each source is saved as a Chinese close-reading archive (精读档案) with full metadata for traceability.
 - `wechat2md` converts WeChat (mp.weixin.qq.com) articles to Markdown — see its SKILL.md for the Python dependencies.
 - `x2md` scrapes X/Twitter URLs (tweets, Articles, threads) to Markdown via headless Chromium — assumes `~/.scrapling-venv` is set up; see its SKILL.md.

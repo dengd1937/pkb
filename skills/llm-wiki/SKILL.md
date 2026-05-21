@@ -1,11 +1,11 @@
 ---
 name: llm-wiki
-description: "Use when building or maintaining a personal LLM-powered knowledge base. Triggers: ingesting sources into a wiki, querying wiki knowledge, linting wiki quality, 'add to wiki', 'what do I know about', or any mention of 'LLM wiki' or 'Karpathy wiki'."
+description: "Use when building or maintaining a personal LLM-powered knowledge base. Triggers: ingesting sources into raw/, querying knowledge, linting quality, 'add to wiki', 'what do I know about', or any mention of 'LLM wiki' or 'Karpathy wiki'."
 ---
 
 # Karpathy LLM Wiki
 
-Build and maintain a personal knowledge base using LLMs. You manage two directories: `raw/` (immutable source material) and `wiki/` (compiled knowledge articles). Sources go into raw/, you compile them into wiki articles, and the wiki compounds over time.
+Build and maintain a personal knowledge base using LLMs. You manage one directory: `raw/` — per-source Chinese close-reading archives (精读档案), organized by topic. Each source is preserved as a faithful, figure-rich treatment capturing key text, images, tables, formulas, and data.
 
 Core ideas from Karpathy:
 - "The LLM writes and maintains the wiki; the human reads and asks questions."
@@ -13,34 +13,31 @@ Core ideas from Karpathy:
 
 ## Architecture
 
-Three layers, all under the user's project root:
+Single layer, under the user's project root:
 
-**raw/** — Immutable source material. You read, never modify. Organized by topic subdirectories (e.g., `raw/machine-learning/`).
+**raw/** — Per-source Chinese close-reading archives. Each file is a comprehensive treatment of one source — preserving key passages, figures, tables, and data in full. Organized by topic subdirectories (e.g., `raw/machine-learning/`). Contains one special file:
+- `raw/index.md` — Lightweight directory listing. One row per raw file, grouped by topic.
 
-**wiki/** — Compiled knowledge articles. You have full ownership. Organized by topic subdirectories, one level only: `wiki/<topic>/<article>.md`. Contains two special files:
-- `wiki/index.md` — Global index. One row per article, grouped by topic, with link + summary + Updated date.
-- `wiki/log.md` — Append-only operation log.
+**notes/** — Saved synthesized answers (optional, user-initiated only). Flat directory, no subdirectories. Each note is a cross-source synthesis that the user chose to persist. See `references/note-template.md` for format.
 
 **SKILL.md** (this file) — Schema layer. Defines structure and workflow rules.
 
-Templates live in `references/` relative to this file. Read them when you need the exact format for raw files, articles, archive pages, or the index.
+Templates live in `references/` relative to this file. Read them when you need the exact format for raw files.
 
 ### Initialization
 
-Triggers only on the first Ingest. Check whether `raw/` and `wiki/` exist. Create only what is missing; never overwrite existing files:
+Triggers only on the first Ingest. Check whether `raw/` exists. Create only what is missing; never overwrite existing files:
 
 - `raw/` directory (with `.gitkeep`)
-- `wiki/` directory (with `.gitkeep`)
-- `wiki/index.md` — heading `# Knowledge Base Index`, empty body
-- `wiki/log.md` — heading `# Wiki Log`, empty body
+- `raw/index.md` — heading `# Knowledge Base Index`, empty body
 
-If Query or Lint cannot find the wiki structure, tell the user: "Run an ingest first to initialize the wiki." Do not auto-create.
+If Query or Lint cannot find the raw/ structure, tell the user: "Run an ingest first to initialize the knowledge base." Do not auto-create.
 
 ---
 
 ## Ingest
 
-Fetch a source into raw/, then compile it into wiki/. Always both steps, no exceptions.
+Fetch a source into raw/ and update index.md. One step only.
 
 ### Fetch (raw/)
 
@@ -52,168 +49,121 @@ Fetch a source into raw/, then compile it into wiki/. Always both steps, no exce
    - Slug from source title, kebab-case, max 60 characters.
    - Published date unknown → omit the date prefix from the file name (e.g., `descriptive-slug.md`). The metadata Published field still appears; set it to `Unknown`.
    - If a file with the same name already exists, append a numeric suffix (e.g., `descriptive-slug-2.md`).
-   - Include metadata header: source URL, collected date, published date.
+   - Include full metadata header for traceability (Source, Full text, Collected, Published, author, etc.). **Never omit or truncate metadata.**
 
-4. The raw layer must capture the **full source**, never a landing-page snippet or your own summary. If a fetched page looks like only an abstract / teaser / paywalled preview (e.g., an arXiv `/abs/` page), you must obtain the real body before saving — do not save a partial, do not substitute a summary.
+4. The raw file is a **per-source Chinese close-reading archive (精读档案)**. Preserve the essence — key text, figures, tables, formulas, code, and data. Be thorough, not selective. If a fetched page looks like only an abstract / teaser / paywalled preview (e.g., an arXiv `/abs/` page), you must obtain the real body before saving — do not save a partial.
 
-   - **Blogs / articles / docs**: follow the **Blog / Article Full Text** rules below. See `references/blog-template.md`.
-   - **Academic papers (arXiv, OpenReview, ACL Anthology, conference PDFs)**: follow the **Academic Paper Digest** rules below instead. See `references/paper-template.md`.
-   - **Single social-media posts / threads (X, etc.)**: out of scope for this skill — use the dedicated `x2md` skill.
+   - **Blogs / articles / docs**: follow the **Blog / Article Close Reading** rules below. See `references/blog-template.md`.
+   - **Academic papers (arXiv, OpenReview, ACL Anthology, conference PDFs)**: follow the **Academic Paper Close Reading** rules below. See `references/paper-template.md`.
+   - **Other sources**: See `references/raw-template.md` as fallback.
+   - **Single social-media posts / threads (X, etc.)**: out of scope — use the dedicated `x2md` skill.
 
-#### Academic Paper Digest
+#### Academic Paper Close Reading
 
-For papers, the raw file is a faithful **Chinese close-reading digest** (not the English full text). Reproducibility is anchored by the stable `Source` + `Full text` URLs, not by vendoring the full body.
+For papers, the raw file is a thorough **Chinese close reading (精读)** — section-by-section walkthrough preserving key text, formulas, figures, and data. Reproducibility is anchored by the stable metadata URLs.
 
-- **Source vs Full text**: `Source` = the canonical citable URL (for arXiv, the `/abs/<id>` page). `Full text` = the URL you actually read the body from.
+- **Metadata**: Always include `Source` (canonical citable URL), `Full text` (URL actually read), `Collected`, `Published`, authors, affiliations, arXiv ID, venue. Full traceability — these fields are the provenance chain back to the original.
 - **arXiv full-text chain** (try in order, record which worked as `Full text`):
   1. `https://arxiv.org/html/<id>` — official HTML, only exists for papers submitted from ~2023-12 onward.
   2. `https://ar5iv.labs.arxiv.org/html/<id>` — ar5iv mirror; the workhorse for older papers.
   3. PDF — last-resort fallback.
-- **Body**: section-by-section close-reading summary in Chinese, covering down to subsections (experimental setup, ablations, robustness, key results). Keep technical terms in English (chain-of-thought, GSM8K, emergent ability) and keep key formulas (LaTeX) and key numbers verbatim. Faithful to the source — do **not** add cross-source interpretation (意义 / 影响 / 在某框架中的位置); that belongs only in wiki/.
-- **Figures**: download important figures into `raw/<topic>/assets/<slug>/` and reference them locally, each with a Chinese caption. Charts rendered as inline SVG/HTML (not downloadable images) → transcribe their data into a Markdown table instead.
-- **Tables**: convert key result tables to Markdown tables, with real numbers transcribed verbatim (never invent or estimate values).
-- **References**: do not vendor the full bibliography. List only the works the body actually leans on, then point to the `Full text` URL for the complete list.
-- **Strip as format noise**: the body's duplicated title/author/email block, figure-axis numeric runs (e.g. `$0$ $20$ $40$ …`), mirror footer chrome, and submission boilerplate (NeurIPS Checklist, Version Control, Reproducibility / Ethics Statement, Acknowledgements).
+- **Abstract**: faithful Chinese translation.
+- **Body**: section-by-section close reading in Chinese. Cover down to subsections. Preserve:
+  - Key arguments and reasoning chains in full, not just conclusions.
+  - Technical terms in English (chain-of-thought, GSM8K, emergent ability).
+  - Key formulas (LaTeX) and key numbers verbatim.
+  - Experimental setup details, ablation results, robustness analysis.
+  - Important passages quoted directly when the original phrasing matters.
+- **Figures**: download ALL content figures into `raw/<topic>/assets/<slug>/` and reference them locally, each with a Chinese caption. Charts rendered as inline SVG/HTML (not downloadable images) → transcribe their data into a Markdown table instead. Do not skip figures — they are part of the reading.
+- **Tables**: convert ALL result tables to Markdown tables, with real numbers transcribed verbatim (never invent or estimate values).
+- **References**: list the works the body actually leans on, point to the `Full text` URL for the complete bibliography.
+- **Strip as format noise**: duplicated title/author/email block, figure-axis numeric runs, mirror footer chrome, submission boilerplate (NeurIPS Checklist, Version Control, Reproducibility / Ethics Statement, Acknowledgements).
+- **Do not add external interpretation** (意义 / 影响 / cross-source commentary). This is a faithful reading of ONE source.
 
-#### Blog / Article Full Text
+#### Blog / Article Close Reading
 
-For blogs/articles/docs, the raw file is a faithful **full Chinese translation of the entire post** — not a summary, not a digest. Every section, paragraph, list, and table is preserved; nothing is condensed or dropped.
+For blogs/articles/docs, the raw file is a faithful **full Chinese translation of the entire post** — every section, paragraph, list, and table preserved; nothing condensed or dropped.
 
-- **Fetch the real full body, not a summarizer's output**. Pull the raw HTML directly (e.g. `curl -sL`), isolate the article content container, strip site chrome (nav, sidebar, table-of-contents, footer, comment widgets, share buttons), and convert to Markdown. Do **not** use a summarizing web-fetch tool as the source of the body — it silently truncates and paraphrases.
-- **Source vs Full text**: `Source` = canonical post URL. `Full text` = the URL the body was actually pulled from (often the same). If the site offers an official translation in the user's language, prefer it as `Full text` but still capture the whole post.
-- **Translate the full text into Chinese**, faithfully and completely. Keep the original section structure and ordering. Keep technical terms / proper nouns in their original form (e.g. chain-of-thought, ReAct, HNSW). Translate figure captions into Chinese.
-- **Keep code, prompts, configs, JSON, BibTeX, and command snippets verbatim in the original language** inside fenced code blocks — translating an artifact corrupts it.
-- **Images**: download every content image into `raw/<topic>/assets/<slug>/` and reference them locally inline at their original position, each with a translated caption. Convert HTML tables to Markdown tables.
-- **References / citation blocks**: keep as-is (do not translate bibliographic entries or `@article{...}`).
-- **Do not add interpretation** (意义 / 影响 / 个人评价). The raw file is the faithfully translated source; synthesis belongs only in wiki/.
+- **Metadata**: Always include `Source`, `Full text`, `Collected`, `Published`, author, publication. Full traceability.
+- **Fetch the real full body, not a summarizer's output**. Pull the raw HTML directly (e.g. `curl -sL`), isolate the article content container, strip site chrome (nav, sidebar, footer, comment widgets, share buttons), and convert to Markdown. Do **not** use a summarizing web-fetch tool as the source — it silently truncates and paraphrases.
+- **Translate the full text into Chinese**, faithfully and completely. Keep original section structure and ordering. Keep technical terms / proper nouns in their original form (e.g. chain-of-thought, ReAct, HNSW). Translate figure captions into Chinese.
+- **Keep code, prompts, configs, JSON, BibTeX, and command snippets verbatim** in the original language inside fenced code blocks — translating an artifact corrupts it.
+- **Images**: download EVERY content image into `raw/<topic>/assets/<slug>/` and reference them locally inline at their original position, each with a translated caption. Convert HTML tables to Markdown tables.
+- **References / citation blocks**: keep as-is (do not translate bibliographic entries).
+- **Do not add interpretation** (意义 / 影响 / 个人评价). Faithful reading only.
 
 See `references/raw-template.md` (fallback) / `references/blog-template.md` (blogs) / `references/paper-template.md` (papers) for the exact format.
 
-### Compile (wiki/)
-
-Determine where the new content belongs:
-
-- **Same core thesis as existing article** → Merge into that article. Add the new source to Sources/Raw. Update affected sections.
-- **New concept** → Create a new article in the most relevant topic directory. Name the file after the concept, not the raw file.
-- **Spans multiple topics** → Place in the most relevant directory. Add See Also cross-references to related articles elsewhere.
-
-These are not mutually exclusive. A single source may warrant merging into one article while also creating a separate article for a distinct concept it introduces. In all cases, check for factual conflicts: if the new source contradicts existing content, annotate the disagreement with source attribution. When merging, note the conflict within the merged article. When the conflicting content lives in separate articles, note it in both and cross-link them.
-
-See `references/article-template.md` for article format. Key points:
-- Sources field: author, organization, or publication name + date, semicolon-separated.
-- Raw field: markdown links to raw/ files, semicolon-separated.
-- Relative paths from `wiki/<topic>/` use `../../raw/<topic>/<file>.md` (two levels up to project root).
-
-### Cascade Updates
-
-After the primary article, check for ripple effects:
-
-1. Scan articles in the same topic directory for content affected by the new source.
-2. Scan `wiki/index.md` entries in other topics for articles covering related concepts.
-3. Update every article whose content is materially affected. Each updated file gets its Updated date refreshed.
-
-Archive pages are never cascade-updated (they are point-in-time snapshots).
-
 ### Post-Ingest
 
-Update `wiki/index.md`: add or update entries for every touched article. When adding a new topic section, include a one-line description. The Updated date reflects when the article's knowledge content last changed, not the file system timestamp. See `references/index-template.md` for format.
-
-Append to `wiki/log.md`:
-
-```
-## [YYYY-MM-DD] ingest | <primary article title>
-- Updated: <cascade-updated article title>
-- Updated: <another cascade-updated article title>
-```
-
-Omit `- Updated:` lines when no cascade updates occur.
+Update `raw/index.md`: add entry for the new file. When adding a new topic section, include a one-line description. See `references/index-template.md` for format.
 
 ---
 
 ## Query
 
-Search the wiki and answer questions. Examples of triggers:
+Search the raw/ archives and answer questions. Examples of triggers:
 - "What do I know about X?"
 - "Summarize everything related to Y"
-- "Compare A and B based on my wiki"
+- "Compare A and B based on my knowledge base"
 
 ### Steps
 
-1. Read `wiki/index.md` to locate relevant articles.
-2. Read those articles and synthesize an answer.
-3. Prefer wiki content over your own training knowledge. Cite sources with markdown links: `[Article Title](wiki/topic/article.md)` (project-root-relative paths for in-conversation citations; within wiki/ files, use paths relative to the current file).
-4. Output the answer in the conversation. Do not write files unless asked.
+1. Read `raw/index.md` to locate relevant files.
+2. Read those raw files and synthesize an answer.
+3. Prefer raw/ content over your own training knowledge. Cite sources with markdown links: `[Title](raw/topic/file.md)` (project-root-relative paths for in-conversation citations).
+4. Output the answer in the conversation. Do not write files unless the user explicitly asks to save the answer (see Save below).
 
-### Archiving
+### Save
 
-When the user explicitly asks to archive or save the answer to the wiki:
+When the user explicitly asks to save, persist, or keep the answer:
 
-1. Write the answer as a new wiki page. See `references/archive-template.md`. When converting conversation citations to the archive page, rewrite project-root-relative paths (e.g., `wiki/topic/article.md`) to file-relative paths (e.g., `../topic/article.md` or `article.md` for same-directory).
-   - Sources: markdown links to the wiki articles cited in the answer.
-   - No Raw field (content does not come from raw/).
-   - File name reflects the query topic, e.g., `transformer-architectures-overview.md`.
-   - Place in the most relevant topic directory.
-2. Always create a new page. Never merge into existing articles (archive content is a synthesized answer, not raw material).
-3. Update `wiki/index.md`. Prefix the Summary with `[Archived]`.
-4. Append to `wiki/log.md`:
-   ```
-   ## [YYYY-MM-DD] query | Archived: <page title>
-   ```
+1. Create `notes/` if it does not exist (with `.gitkeep`).
+2. Save as `notes/descriptive-slug.md`. Slug from the query topic, kebab-case, max 60 characters.
+3. The note must include a `Raw` field linking back to every raw/ file it draws from — this is the provenance chain. Use relative paths (e.g., `../raw/topic/file.md`).
+4. Output the file path to the user.
 
 ---
 
 ## Lint
 
-Quality checks on the wiki. Two categories with different authority levels.
+Quality checks on raw/ archives. Two categories with different authority levels.
 
 ### Deterministic Checks (auto-fix)
 
 Fix these automatically:
 
-**Index consistency** — compare `wiki/index.md` against actual wiki/ files (excluding index.md and log.md):
-- File exists but missing from index → add entry with `(no summary)` placeholder. For Updated, use the article's metadata Updated date if present; otherwise fall back to file's last modified date.
-- Index entry points to nonexistent file → mark as `[MISSING]` in the index. Do not delete the entry; let the user decide.
+**Index consistency** — compare `raw/index.md` against actual raw/ files (excluding index.md):
+- File exists but missing from index → add entry with `(no summary)` placeholder.
+- Index entry points to nonexistent file → mark as `[MISSING]`. Do not delete; let the user decide.
 
-**Internal links** — for every markdown link in wiki/ article files (body text and Sources metadata), excluding Raw field links (validated by Raw references below) and excluding index.md/log.md (handled above):
-- Target does not exist → search wiki/ for a file with the same name elsewhere.
-  - Exactly one match → fix the path.
-  - Zero or multiple matches → report to the user.
+**Asset links** — for every image/file link in raw/ files:
+- Target does not exist → report to the user.
 
-**Raw references** — every link in a Raw field must point to an existing raw/ file:
-- Target does not exist → search raw/ for a file with the same name elsewhere.
-  - Exactly one match → fix the path.
-  - Zero or multiple matches → report to the user.
-
-**See Also** — within each topic directory:
-- Add obviously missing cross-references between related articles.
-- Remove links to deleted files.
+**Notes Raw references** — for every `Raw` link in notes/ files:
+- Target raw/ file does not exist → report to the user.
 
 ### Heuristic Checks (report only)
 
 These rely on your judgment. Report findings without auto-fixing:
 
-- Factual contradictions across articles
-- Outdated claims superseded by newer sources
-- Missing conflict annotations where sources disagree
-- Orphan pages with no inbound links from other wiki articles
-- Missing cross-topic references
-- Concepts frequently mentioned but lacking a dedicated page
-- Archive pages whose cited source articles have been substantially updated since archival
+- Metadata fields missing or incomplete (Source, Full text, Collected, Published, author)
+- Images still pointing to external URLs instead of local `assets/` paths
+- Tables with placeholder or estimated values instead of real data
+- Code blocks containing Chinese — likely translated when they should be verbatim original
+- Sections that are overly thin — likely incomplete close readings
+- Topic directories that could be merged
 
 ### Post-Lint
 
-Append to `wiki/log.md`:
-
-```
-## [YYYY-MM-DD] lint | <N> issues found, <M> auto-fixed
-```
+Report findings to the user. No log file — output a summary in the conversation.
 
 ---
 
 ## Conventions
 
 - Standard markdown with relative links throughout.
-- wiki/ supports one level of topic subdirectories only. No deeper nesting.
-- Today's date for log entries, Collected dates, and Archived dates. Updated dates reflect when the article's knowledge content last changed. Published dates come from the source (use `Unknown` when unavailable).
-- Inside wiki/ files, all markdown links use paths relative to the current file. In conversation output, use project-root-relative paths (e.g., `wiki/topic/article.md`).
-- Ingest updates both `wiki/index.md` and `wiki/log.md`. Archive (from Query) updates both. Lint updates `wiki/log.md` (and `wiki/index.md` only when auto-fixing index entries). Plain queries do not write any files.
+- raw/ supports one level of topic subdirectories only. No deeper nesting.
+- Today's date for Collected dates. Published dates come from the source (use `Unknown` when unavailable).
+- Inside raw/ files, all markdown links use paths relative to the current file. In conversation output, use project-root-relative paths (e.g., `raw/topic/file.md`).
+- Ingest updates `raw/index.md`. Lint may update `raw/index.md` (auto-fix only). Queries write files only when the user explicitly asks to save.
